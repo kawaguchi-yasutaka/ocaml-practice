@@ -20,7 +20,7 @@ let test_romaji_to_kanji2 = romaji_to_kanji "tekitou" global_ekimei_list = ""
 
 
 
-(* 目的 感じで駅名二つと駅館リストを受け取り、2駅間の距離を返す*)
+(* 目的 漢字で駅名二つと駅間リストを受け取り、2駅間の距離を返す*)
 (* get_ekikan_kyori : sting -> string -> ekikan_t list -> int *) 
 let rec get_ekikan_kyori kiten shuten ekikan_list = match ekikan_list with
 | [] -> infinity
@@ -91,8 +91,6 @@ let make_initial_eki_list ekimei_list shiten = shokika (make_eki_list ekimei_lis
 
 
 
-
-
 let rec ekimei_insert lst ekimei = match lst with
 | [] -> [ekimei]
 | ({kana = k} as first)::rest -> 
@@ -141,16 +139,16 @@ let test_koushin1_3 = kousin1 shiten_koushin {namae = "新大塚";saitan_kyori =
 
 	(* 13.7 koushin *)
 	(* 直前に最短距離が確定した、eki_tを未確定のeki_t listを受け取ってkousih1を適用してlist_tを返す *)
-	let rec kousin prev_shortest_eki eki_lst = match eki_lst with
+	let rec kousin prev_shortest_eki eki_lst ekikan_list = match eki_lst with
 	| [] -> []
 	| first::rest -> 	(fun p q -> match (p,q) with
 	({namae = pn;saitan_kyori =ps;temae_list = pl},{namae = qn;saitan_kyori =qs;temae_list = ql}) -> 
-		let pqkyori = get_ekikan_kyori pn qn global_ekikan_list in 
+		let pqkyori = get_ekikan_kyori pn qn ekikan_list in 
 		if pqkyori = infinity then q
 		else if ps +. pqkyori < qs then {namae = qn;saitan_kyori = ps +. pqkyori;temae_list=qn::pl}
-		else q) prev_shortest_eki first::kousin prev_shortest_eki rest
-	let test_kousin1 = kousin shiten_koushin [] = []
-	let test_kousin2 = kousin shiten_koushin [{namae = "埼玉";saitan_kyori = infinity;temae_list=[]};{namae = "新大塚";saitan_kyori = infinity;temae_list=[]}] = 
+		else q) prev_shortest_eki first::kousin prev_shortest_eki rest ekikan_list
+	let test_kousin1 = kousin shiten_koushin [] global_ekikan_list = []
+	let test_kousin2 = kousin shiten_koushin [{namae = "埼玉";saitan_kyori = infinity;temae_list=[]};{namae = "新大塚";saitan_kyori = infinity;temae_list=[]}] global_ekikan_list = 
 		[{namae = "埼玉";saitan_kyori = infinity;temae_list=[]};{namae = "新大塚";saitan_kyori = 1.8;temae_list=["新大塚";"池袋"]}]
 
 
@@ -165,8 +163,6 @@ let saitan_wo_bunri lst =
 		| first::rest -> if first = saitan then remove rest saitan else first::remove rest saitan in
 	let saitan = saitaneki lst in (saitan,remove lst saitan)
 
-let saitan_wo_bunri_fold_right lst = 	
-
 let test_saitan_wo_bunri = saitan_wo_bunri [] = ({namae = "infinity";saitan_kyori = infinity;temae_list=[]},[])
 let test_saitan_wo_bunri2 =  saitan_wo_bunri [{namae = "埼玉";saitan_kyori = infinity;temae_list=[]};{namae = "新大塚";saitan_kyori = 1.8;temae_list=["新大塚";"池袋"]}]
 = ({namae = "新大塚";saitan_kyori = 1.8;temae_list=["新大塚";"池袋"]}, [{namae = "埼玉";saitan_kyori = infinity;temae_list=[]}])
@@ -175,4 +171,29 @@ let test_saitan_wo_bunri2 =  saitan_wo_bunri [{namae = "埼玉";saitan_kyori = i
 
 
 
+(* 16.4	 eki_t list（最短距離未確定）とekikan_t list (駅間リスト) の駅間リストを受け取ったら、
+　       最短距離と最短経路が入った、eki_listを返す
+*)
 
+(* resultは最短距離がもとまったもの*)
+
+let dijkustra_main eki_lst ekikan_lst = 
+	let rec daikustra eki_lst ekikan_lst result =
+	let (saitan,rest) = saitan_wo_bunri eki_lst in 
+	if saitan.namae = "infinity" then result
+	else daikustra (kousin saitan rest ekikan_lst) ekikan_lst (saitan::result)
+	in daikustra eki_lst ekikan_lst []
+
+
+
+(* 16.5 始点の駅名（ローマ字の文字列）終点の駅名（ローマ字の文字列)から終点の駅レコードを返す*)
+(*　同じ区間内でのみ算出可能 (seiretu関数で重複取り除いているが、取り方が求める区間で問題あり)*)
+let dijkusutra shiten shuten = let not_duplicate_ekimei_list = seiretsu global_ekimei_list in
+	let shiten = romaji_to_kanji shiten not_duplicate_ekimei_list in
+	let shuten = romaji_to_kanji shuten not_duplicate_ekimei_list in
+	let initial_eki_list = make_initial_eki_list not_duplicate_ekimei_list shiten in
+	let updated_eki_list = dijkustra_main initial_eki_list global_ekikan_list in
+	let rec find_shuten lst = match lst with
+	| [] -> {namae = "not found"; saitan_kyori = infinity ;temae_list = []}
+	| ({namae = n} as first)::rest -> if n = shuten then first else find_shuten rest
+	in find_shuten updated_eki_list
