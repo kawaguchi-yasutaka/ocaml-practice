@@ -1,0 +1,30 @@
+(* 目的 月month日dateを受け取って星座を返す*)
+(* seiza : int -> int-> string*)
+let seiza month date =
+	if month = 3 && (date >= 21 && date <=31) || month = 4 && (date <= 19) then "牡羊座"
+	else if month = 4 && (date <= 20) || month = 5 && (date <= 20) then "牡牛座"
+	else if month = 5 && (date >= 21 && date <=31) || month = 6 && (date <= 21) then "双子座"
+	else if month = 6 && (date <= 22) || month = 7 && (date <= 22) then "蟹座"
+	else if month = 7 && (date >= 23 && date <= 31) || month = 8 && (date <= 22) then "獅子座"
+	else if month = 8 && (date >= 23 && date <= 31) || month = 9 && (date <= 22) then "乙女座"
+	else if month = 9 && (date >= 23 && date <= 30) || month = 10 && (date <= 23) then "天秤座"
+	else if month = 10 && (date >= 24 && date <=31) || month = 11 && (date <= 22) then "蠍座"
+	else if month = 11 && (date >= 23 && date <= 30) || month = 12 && (date <= 21) then "射手座"
+	else if month = 12 && (date >= 22 && date <= 31) || month = 1 && (date <= 19) then "山羊座"
+	else if month = 1 && (date >= 20 && date <= 31) || month = 2 && (date <= 18) then "水瓶座"
+	else if month = 2 && (date  >= 19 && date <= 28) || month = 3 && (date <= 20) then "水瓶座"
+	else "知らない"
+
+
+let test1 = seiza 3 21 = "牡羊座"
+let test1 = seiza 4 20 = "牡牛座"
+let test1 = seiza 5 21 = "双子座"
+let test1 = seiza 6 22 = "蟹座"
+let test1 = seiza 7 23 = "獅子座"
+let test1 = seiza 8 23 = "乙女座"
+let test1 = seiza 9 23 = "天秤座"
+let test1 = seiza 10 24 = "蠍座"
+let test1 = seiza 11 23 = "射手座"
+let test1 = seiza 12 22 = "山羊座"
+let test1 = seiza 1 20 = "水瓶座"
+let test1 = seiza 2 19 = "水瓶座"
